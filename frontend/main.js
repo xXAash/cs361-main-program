@@ -112,6 +112,19 @@ function renderDateWheel() {
 }
 
 function openModal(type) {
+  // Help modal
+  if (type === "help") {
+    document.getElementById("help-modal").classList.remove("hidden");
+    return;
+  }
+
+  // Clear Data modal
+  if (type === "clearData") {
+    document.getElementById("clear-modal").classList.remove("hidden");
+    return;
+  }
+
+  // Assignment/Class/Event modal
   const modal = document.getElementById("modal-overlay");
   const form = document.getElementById("modal-form");
   const title = document.getElementById("modal-title");
@@ -246,8 +259,23 @@ function submitModal() {
     });
 }
 
-function closeModal() {
-  document.getElementById("modal-overlay").classList.add("hidden");
+function closeModal(type) {
+  if (
+    !type ||
+    type === "addAssignment" ||
+    type === "addClass" ||
+    type === "addEvent"
+  ) {
+    document.getElementById("modal-overlay").classList.add("hidden");
+  }
+
+  if (type === "help") {
+    document.getElementById("help-modal").classList.add("hidden");
+  }
+
+  if (type === "clearData") {
+    document.getElementById("clear-modal").classList.add("hidden");
+  }
 }
 
 function updateViewRequest() {
@@ -291,6 +319,15 @@ function updateViewRequest() {
 
   document.getElementById("current-date").textContent =
     focusedDate.toDateString();
+}
+
+function deleteAllData() {
+  fetch("/clear-all", { method: "POST" })
+    .then(() => {
+      closeModal("clearData");
+      renderDateWheel(); // Refresh content after clearing
+    })
+    .catch((err) => console.error("Failed to delete data", err));
 }
 
 renderDateWheel();

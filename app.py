@@ -97,6 +97,32 @@ def submit_entry():
 
 # -----------------------------------------------------------------------
 
+@app.post("/clear-all")
+def clear_all_data():
+    '''
+    Clears all data files by overwriting them with empty strings.
+    This is used for the Clear All Data button in the frontend.
+    '''
+
+    # Paths to your data files
+    files_to_clear = [
+        "shared-files/assignments.txt",
+        "shared-files/input.txt",
+        "shared-files/schedule.txt",
+        "shared-files/dashboard-output.txt"
+    ]
+
+    for file_path in files_to_clear:
+        try:
+            with open(file_path, "w") as f:
+                f.write("")  # Overwrite file with empty string
+        except FileNotFoundError:
+            pass  # It's okay if the file doesn't exist yet
+
+    return {"status": "cleared"}
+
+# -----------------------------------------------------------------------
+
 # Start the Flask development server when running this script directly
 if __name__ == "__main__":
     app.run(debug=True)  # Enable debug mode for easier development
