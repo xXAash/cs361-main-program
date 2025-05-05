@@ -1,3 +1,5 @@
+# cs361-main-program
+
 # Student Calendar
 
 This is a student-friendly calendar and scheduling app built using Python (Flask), HTML/CSS, JavaScript, and TailwindCSS. It allows users to manage their classes, assignments, and events.
@@ -39,7 +41,7 @@ student-calendar/
 1. Clone the repo:
 
    ```bash
-   git clone https://github.com/xXAash/student-calendar.git
+   git clone https://github.com/xXAash/cs361-main-program.git
    cd student-calendar
    ```
 
