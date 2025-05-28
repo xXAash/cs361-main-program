@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Student Calendar</title>
-    <script src="main.js" defer></script>
+    <script type="module" src="js/main.js" defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-gray-100 min-h-screen font-sans text-black">
@@ -14,10 +14,10 @@
         <h1 id="current-date" class="text-3xl font-bold underline"></h1>
         <div class="space-x-2">
           <button
-            onclick="openModal('addAssignment')"
+            onclick="openModal('addTask')"
             class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded"
           >
-            + Add Assignment
+            + Add Task
           </button>
           <button
             onclick="openModal('addClass')"
@@ -32,6 +32,12 @@
             + Add Event
           </button>
         </div>
+        <button
+          id="logout-btn"
+          class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
+        >
+          Logout
+        </button>
       </div>
 
       <!-- Schedule + Date Wheel -->
@@ -44,12 +50,19 @@
             class="space-y-1 text-sm text-gray-800"
           ></div>
         </div>
-        <!-- Date Wheel -->
-        <div
-          id="date-wheel"
-          class="flex flex-col gap-2 items-center justify-center"
-        ></div>
-      </div>
+
+        <!-- Date Controls -->
+        <div id="date-controls" class="flex items-center justify-center gap-4 mb-6">
+          <button id="prev-day" class="text-2xl font-bold">&larr;</button>
+          <h2 id="current-date" class="text-xl font-semibold"></h2>
+          <button id="next-day" class="text-2xl font-bold">&rarr;</button>
+        </div>
+
+        <div class="flex justify-center gap-4 mt-4">
+          <button class="bg-gray-200 px-4 py-2 rounded" onclick="setView('daily')">Daily</button>
+          <button class="bg-gray-200 px-4 py-2 rounded" onclick="setView('weekly')">Weekly</button>
+          <button class="bg-gray-200 px-4 py-2 rounded" onclick="setView('monthly')">Monthly</button>
+        </div>
 
       <!-- Calendar + Assignments -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
