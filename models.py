@@ -16,7 +16,6 @@ class RecurringConfig(BaseModel):
 
 class Task(BaseModel):
     _id: Optional[str] = None
-    user_id: Optional[str] = None
     title: str
     description: Optional[str] = None
     due_date: date
@@ -25,7 +24,6 @@ class Task(BaseModel):
 
 class Event(BaseModel):
     _id: Optional[str] = None
-    user_id: Optional[str] = None
     title: str
     location: str
     event_date: date
@@ -35,7 +33,6 @@ class Event(BaseModel):
 
 class Class(BaseModel):
     _id: Optional[str] = None
-    user_id: Optional[str] = None
     title: str
     online: bool = False
     location: str

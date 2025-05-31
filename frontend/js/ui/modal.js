@@ -108,11 +108,10 @@ export function openModal(type) {
 export function submitModal(userId, focusedDate, setFocusedDate) {
   const form = document.getElementById("modal-form");
   const type = form.dataset.type;
-  const data = Object.fromEntries(new FormData(form));
-  data.user_id = userId;
+  const data = Object.fromEntries(new FormData(form)); // raw form data
 
-  console.log("Form submission started for type:", type);
-  console.log("Raw data collected from form:", data);
+  console.log("🟡 Form submission started for type:", type);
+  console.log("🟡 Raw form data collected:", data);
 
   if (type === "addTask" && data.linked_to) {
     const [linkType, linkTitle] = data.linked_to.split("::");
@@ -155,32 +154,38 @@ export function submitModal(userId, focusedDate, setFocusedDate) {
         .then(({ start_date, end_date }) => {
           data.start_date = start_date;
           data.end_date = end_date;
-          console.log("Final data before postClass:", data);
-          return postFunc(data);
+
+          console.log(
+            "🟡 Final recurring class data before postClass():",
+            data
+          );
+          return postFunc(userId, data); // 👈 passing userId + data separately
         })
         .then(() => {
           closeModal();
           updateViewRequest(userId, focusedDate);
         })
         .catch((err) => {
-          console.error("Error submitting class (recurring):", err);
+          console.error("❌ Error submitting class (recurring):", err);
           alert("Failed to submit class: " + err.message);
         });
 
       return;
     } else {
-      console.log("Posting online class data:", data);
+      console.log("🟡 Posting online class data:", data);
     }
   }
 
   if (postFunc) {
-    postFunc(data)
+    console.log("📤 Calling postFunc() with:", { userId, data });
+
+    postFunc(userId, data)
       .then(() => {
         closeModal();
         updateViewRequest(userId, focusedDate);
       })
       .catch((err) => {
-        console.error("Error submitting:", err);
+        console.error("❌ Error submitting:", err);
         alert("Failed to submit: " + err.message);
       });
   }

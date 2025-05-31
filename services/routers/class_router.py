@@ -1,34 +1,22 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 from services.logic.add_class import (
     insert_single_class,
     insert_recurring_classes,
     fetch_user_classes
 )
-from models import Class  # your Pydantic class model
+from services.logic.add_requests import AddClassRequest, AddRecurringClassRequest
+from models import Class
 
 router = APIRouter()
 
-class ClassEntry(BaseModel):
-    user_id: str
-    title: str
-    location: str
-    room: Optional[str] = None
-    days: Optional[List[str]] = None
-    start_time: Optional[str] = None  # ISO time string
-    end_time: Optional[str] = None
-    term: Optional[str] = None
-    year: Optional[int] = None
-    online: bool = False
-
 @router.post("/api/classes")
-def add_class(entry: ClassEntry):
-    entry_dict = entry.dict()
-    if entry.online:
-        return insert_single_class(entry_dict)
-    else:
-        return insert_recurring_classes(entry_dict)
+def add_class(req: AddClassRequest):
+    return insert_single_class(req)
+
+@router.post("/api/classes/recurring")
+def add_recurring_class(req: AddRecurringClassRequest):
+    return insert_recurring_classes(req)
 
 @router.get("/api/classes/{user_id}", response_model=List[Class])
 def get_classes(user_id: str):
