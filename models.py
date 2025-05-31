@@ -21,6 +21,7 @@ class Task(BaseModel):
     due_date: date
     due_time: time
     linked_to: Optional[LinkedReference] = None
+    tags: List[str] = []
 
 class Event(BaseModel):
     _id: Optional[str] = None
@@ -30,6 +31,7 @@ class Event(BaseModel):
     start_time: time
     end_time: time
     recurring: Optional[RecurringConfig] = None
+    tags: List[str] = []
 
 class Class(BaseModel):
     _id: Optional[str] = None
@@ -41,6 +43,7 @@ class Class(BaseModel):
     start_time: Optional[time] = None
     end_time: Optional[time] = None
     recurring: Optional[RecurringConfig] = None
+    tags: List[str] = []
     
 
 class User(BaseModel):
