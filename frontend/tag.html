@@ -6,6 +6,7 @@
     <script type="module" src="js/microservices/tag-modals.js" defer></script>
     <script type="module" src="js/microservices/add-tag.js" defer></script>
     <script type="module" src="js/microservices/delete-tag.js" defer></script>
+    <script type="module" src="js/microservices/view-tag.js" defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-gray-100 min-h-screen font-sans text-black">
@@ -14,20 +15,44 @@
       <div
         class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
       >
-        <!-- Filter section replaces date -->
-        <div
-          class="flex flex-col md:flex-row items-start md:items-center gap-3 w-full"
-        >
-          <label for="tag-filter" class="text-lg font-semibold md:mb-0"
-            >Filter by Tags:</label
-          >
-          <select
-            id="tag-filter"
-            multiple
-            class="w-full md:w-[24rem] border rounded-xl p-2 text-sm bg-white"
-          >
-            <!-- Options inserted via JS -->
-          </select>
+        <!-- Filter section -->
+        <div class="flex flex-wrap items-center gap-4 w-full">
+          <div class="flex flex-col md:flex-row items-center gap-2">
+            <label for="tag-filter-1" class="text-lg font-semibold"
+              >Filter by Tag 1:</label
+            >
+            <select
+              id="tag-filter-1"
+              class="w-48 border rounded-xl p-2 text-sm bg-white"
+            >
+              <option value="">-- Select Tag --</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col md:flex-row items-center gap-2">
+            <label for="tag-filter-2" class="text-lg font-semibold"
+              >Filter by Tag 2:</label
+            >
+            <select
+              id="tag-filter-2"
+              class="w-48 border rounded-xl p-2 text-sm bg-white"
+            >
+              <option value="">-- Select Tag --</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col md:flex-row items-center gap-2">
+            <label for="tag-filter-3" class="text-lg font-semibold"
+              >Filter by Tag 3:</label
+            >
+            <select
+              id="tag-filter-3"
+              class="w-48 border rounded-xl p-2 text-sm bg-white"
+            >
+              <option value="">-- Select Tag --</option>
+            </select>
+          </div>
+
           <button
             onclick="searchByTags()"
             class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700"
@@ -95,18 +120,16 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-white p-6 rounded-3xl shadow w-full">
           <h2 class="text-xl font-semibold mb-2">Schedule:</h2>
-          <div
-            id="schedule-section"
-            class="space-y-1 text-sm text-gray-800"
-          ></div>
+          <div id="schedule-section" class="space-y-1 text-sm text-gray-800">
+            Select tags and click Search to see your schedule here.
+          </div>
         </div>
 
         <div class="bg-white p-6 rounded-3xl shadow w-full">
           <h2 class="text-xl font-semibold mb-2">Assignments Due:</h2>
-          <div
-            id="assignment-section"
-            class="space-y-1 text-sm text-gray-800"
-          ></div>
+          <div id="assignment-section" class="space-y-1 text-sm text-gray-800">
+            Select tags and click Search to see your assignments here.
+          </div>
         </div>
       </div>
 
