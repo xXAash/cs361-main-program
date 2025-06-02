@@ -59,7 +59,10 @@ window.updateTitleDropdown = function () {
 
   if (!userId || !type) return;
 
-  fetch(`/api/${type}s/${userId}`)
+  const endpoint = `/api/${
+    type === "class" ? "classes" : type + "s"
+  }/${userId}`;
+  fetch(endpoint)
     .then((res) => res.json())
     .then((items) => {
       const seenTitles = new Set();
@@ -68,7 +71,7 @@ window.updateTitleDropdown = function () {
         if (!seenTitles.has(item.title)) {
           seenTitles.add(item.title);
           const option = document.createElement("option");
-          option.value = item._id || ""; // pass ObjectId
+          option.value = item.title;
           option.textContent = item.title;
           dropdown.appendChild(option);
         }
