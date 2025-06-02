@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <title>Tag View</title>
-    <script type="module" src="js/add-tag.js" defer></script>
+    <script type="module" src="js/microservices/tag-modals.js" defer></script>
+    <script type="module" src="js/microservices/add-tag.js" defer></script>
+    <script type="module" src="js/microservices/delete-tag.js" defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-gray-100 min-h-screen font-sans text-black">
@@ -148,13 +150,6 @@
         </button>
         <h2 id="modal-title" class="text-xl font-semibold mb-4">Modal Title</h2>
         <form id="modal-form" class="space-y-3"></form>
-        <button
-          onclick="submitModal()"
-          type="button"
-          class="mt-4 bg-gray-800 text-white px-4 py-2 rounded hover:bg-black"
-        >
-          Save
-        </button>
       </div>
     </div>
   </body>

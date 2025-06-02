@@ -10,6 +10,7 @@ from services.routers.task_router import router as task_router
 from services.routers.term_router import router as term_router
 
 from microservices.tag_add_router import router as tag_add_router
+from microservices.tag_delete_router import router as tag_delete_router
 
 app = FastAPI()
 
@@ -21,6 +22,7 @@ app.include_router(task_router)
 app.include_router(term_router)
 
 app.include_router(tag_add_router)
+app.include_router(tag_delete_router)
 
 # CORS (for frontend JS)
 app.add_middleware(

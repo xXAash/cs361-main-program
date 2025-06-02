@@ -1,7 +1,7 @@
 import os
 import time
 from pymongo import MongoClient
-from bson import ObjectId, errors
+from bson import ObjectId
 
 # MongoDB setup
 client = MongoClient("mongodb://localhost:27017/")
@@ -25,9 +25,6 @@ while True:
                 time.sleep(0.5)
                 continue
 
-            print("\n=== File Read ===")
-            print(lines)
-
             open(input_file, "w").close()
 
             data = {}
@@ -36,52 +33,66 @@ while True:
                     key, value = line.strip().split("=", 1)
                     data[key] = value
 
-            print("=== Parsed Data ===")
-            print(data)
-
-            required_keys = ["email", "type", "item_id", "tags"]
+            required_keys = ["email", "type", "title", "tag"]
             for key in required_keys:
                 if key not in data:
-                    raise ValueError(f"Missing required field: '{key}'. Keys found: {list(data.keys())}")
+                    raise ValueError(f"Missing required field: {key}")
 
             user_email = data["email"]
-            item_type = data["type"]
-            item_id = data["item_id"]
-            tags_to_remove = [tag.strip() for tag in data["tags"].split(",")]
+            item_type = data["type"]  # task, class, event
+            title = data["title"]
+            tag_to_remove = data["tag"]
             apply_all = data.get("apply_all", "false").lower() == "true"
-            target_title = data.get("title", "")
+            date = data.get("date")  # optional
 
-            print(f"Looking up user: {user_email}")
             user = users.find_one({"email": user_email})
             if not user:
                 raise ValueError("User not found.")
 
+            # Proper plural mapping
+            collection_key = {
+                "class": "classes",
+                "event": "events",
+                "task": "tasks"
+            }.get(item_type)
+
+            if not collection_key:
+                raise ValueError(f"Invalid item_type: {item_type}")
+
+            items = user.get(collection_key, [])
+            print(f"Found {len(items)} {collection_key}")
             updated = False
-            items = user.get(f"{item_type}s", [])
-            print(f"Found {len(items)} {item_type}s")
 
             for item in items:
-                try:
-                    match = ObjectId(item_id) == item.get("_id")
-                except errors.InvalidId:
-                    match = False
+                if item.get("title") != title:
+                    continue
 
-                if (apply_all and item.get("title") == target_title) or match:
-                    current_tags = set(item.get("tags", []))
-                    new_tags = current_tags - set(tags_to_remove)
-                    item["tags"] = list(new_tags)
+                date_field = {
+                    "class": "class_date",
+                    "event": "event_date",
+                    "task": "due_date"
+                }[item_type]
+
+                if not apply_all:
+                    if date_field not in item or item[date_field] != date:
+                        continue
+
+                tags = set(item.get("tags", []))
+                if tag_to_remove in tags:
+                    tags.remove(tag_to_remove)
+                    item["tags"] = list(tags)
                     updated = True
-                    print(f"❌ Tags removed from item: {item.get('title')}")
+                    print(f"✅ Removed tag '{tag_to_remove}' from '{item['title']}'")
 
             if not updated:
-                raise ValueError("Matching item not found for tag deletion.")
+                raise ValueError("No matching item with tag found for deletion.")
 
             users.update_one(
                 {"email": user_email},
-                {"$set": {f"{item_type}s": items}}
+                {"$set": {collection_key: items}}
             )
 
-            result_msg = f"Tags {tags_to_remove} removed from {item_type}(s)."
+            result_msg = f"Tag '{tag_to_remove}' removed from {item_type}(s)."
             print(result_msg)
             with open(output_file, "w") as f:
                 f.write(result_msg)
