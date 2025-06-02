@@ -24,6 +24,7 @@ def create_task(req: AddTaskRequest):
 
     task_dict = task.dict()
     task_dict["_id"] = ObjectId()
+    task_dict["tags"] = []
     task_dict["due_date"] = task.due_date.isoformat()
     task_dict["due_time"] = task.due_time.isoformat()
 

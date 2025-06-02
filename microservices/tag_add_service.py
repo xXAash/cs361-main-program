@@ -42,35 +42,51 @@ while True:
             print("=== Parsed Data ===")
             print(data)
 
-            # Confirm expected fields
-            required_keys = ["email", "type", "item_id", "tags"]
+            # Confirm required fields
+            required_keys = ["email", "type", "title", "tags"]
             for key in required_keys:
                 if key not in data:
                     raise ValueError(f"Missing required field: '{key}'. Keys found: {list(data.keys())}")
 
             user_email = data["email"]
-            item_type = data["type"]  # task, class, or event
-            item_id = data["item_id"]
+            item_type = data["type"]
+            target_title = data["title"]
             new_tags = [tag.strip() for tag in data["tags"].split(",")]
             apply_all = data.get("apply_all", "false").lower() == "true"
-            target_title = data.get("title", "")
+            target_date = data.get("date")  # optional
 
             print(f"Looking up user: {user_email}")
             user = users.find_one({"email": user_email})
             if not user:
                 raise ValueError("User not found.")
 
+            # Proper plural mapping
+            collection_key = {
+                "class": "classes",
+                "event": "events",
+                "task": "tasks"
+            }.get(item_type)
+
+            if not collection_key:
+                raise ValueError(f"Invalid item_type: {item_type}")
+
+            items = user.get(collection_key, [])
+            print(f"Found {len(items)} {collection_key}")
             updated = False
-            items = user.get(f"{item_type}s", [])
-            print(f"Found {len(items)} {item_type}s")
 
             for item in items:
-                try:
-                    match = ObjectId(item_id) == item.get("_id")
-                except errors.InvalidId:
-                    match = False
+                title_matches = item.get("title") == target_title
+                date_matches = True  # default true if no date specified
 
-                if (apply_all and item.get("title") == target_title) or match:
+                if not apply_all and target_date:
+                    if item_type == "class":
+                        date_matches = item.get("class_date") == target_date
+                    elif item_type == "event":
+                        date_matches = item.get("event_date") == target_date
+                    elif item_type == "task":
+                        date_matches = item.get("due_date") == target_date
+
+                if (apply_all and title_matches) or (not apply_all and title_matches and date_matches):
                     existing = set(item.get("tags", []))
                     item["tags"] = list(existing.union(new_tags))
                     updated = True
@@ -79,10 +95,10 @@ while True:
             if not updated:
                 raise ValueError("Matching item not found for tag addition.")
 
-            # Write back updated array
+            # Save changes to DB
             users.update_one(
                 {"email": user_email},
-                {"$set": {f"{item_type}s": items}}
+                {"$set": {collection_key: items}}
             )
 
             result_msg = f"Tags {new_tags} added to {item_type}(s)."

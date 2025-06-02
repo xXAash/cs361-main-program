@@ -14,6 +14,7 @@ def insert_single_class(req: AddClassRequest):
 
     new_class = req.new_class.dict()
     new_class["_id"] = ObjectId()
+    new_class["tags"] = []
     new_class["class_date"] = new_class.get("class_date")
     start_time = new_class.get("start_time")
     end_time = new_class.get("end_time")
@@ -52,6 +53,7 @@ def insert_recurring_classes(req: AddRecurringClassRequest):
 
     for cls in generated_classes:
         cls["_id"] = ObjectId()
+        cls["tags"] = []
 
         if "class_date" in cls:
             cls["class_date"] = cls["class_date"].isoformat()

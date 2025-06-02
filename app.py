@@ -9,6 +9,8 @@ from services.routers.event_router import router as event_router
 from services.routers.task_router import router as task_router
 from services.routers.term_router import router as term_router
 
+from microservices.tag_add_router import router as tag_add_router
+
 app = FastAPI()
 
 # Include API routers
@@ -17,6 +19,8 @@ app.include_router(class_router)
 app.include_router(event_router)
 app.include_router(task_router)
 app.include_router(term_router)
+
+app.include_router(tag_add_router)
 
 # CORS (for frontend JS)
 app.add_middleware(

@@ -13,6 +13,7 @@ def insert_single_event(req: AddEventRequest):
 
     new_event = req.new_event.dict()
     new_event["_id"] = ObjectId()
+    new_event["tags"] = []
 
     if "event_date" in new_event:
         new_event["event_date"] = new_event["event_date"].isoformat()
@@ -47,6 +48,7 @@ def insert_recurring_events(req: AddRecurringEventRequest):
 
     for event in generated_events:
         event["_id"] = ObjectId()
+        event["tags"] = []
         if "event_date" in event:
             event["event_date"] = event["event_date"].isoformat()
         if "start_time" in event and isinstance(event["start_time"], time):
