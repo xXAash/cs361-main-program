@@ -1,4 +1,10 @@
-import { postClass, postTask, postEvent } from "../utils/api.js";
+import {
+  postTask,
+  postClass,
+  postRecurringClass,
+  postEvent,
+  postRecurringEvent,
+} from "../utils/api.js";
 import { updateViewRequest } from "./render.js";
 
 export function openModal(type) {
@@ -12,23 +18,33 @@ export function openModal(type) {
 
   if (type === "addTask") {
     title.textContent = "Add Task";
-    const classes = JSON.parse(localStorage.getItem("user_classes") || "[]");
-    const events = JSON.parse(localStorage.getItem("user_events") || "[]");
+    renderTaskForm(form);
+  } else if (type === "addClass") {
+    title.textContent = "Add Class";
+    renderClassForm(form);
+  } else if (type === "addEvent") {
+    title.textContent = "Add Event";
+    renderEventForm(form);
+  }
+}
 
-    // Deduplicate by title
-    const uniqueClassTitles = [...new Set(classes.map((cls) => cls.title))];
-    const uniqueEventTitles = [...new Set(events.map((evt) => evt.title))];
+function renderTaskForm(form) {
+  const classes = JSON.parse(localStorage.getItem("user_classes") || "[]");
+  const events = JSON.parse(localStorage.getItem("user_events") || "[]");
 
-    const options = [
-      ...uniqueClassTitles.map(
-        (title) => `<option value="class::${title}">${title} (Class)</option>`
-      ),
-      ...uniqueEventTitles.map(
-        (title) => `<option value="event::${title}">${title} (Event)</option>`
-      ),
-    ];
+  const uniqueClassTitles = [...new Set(classes.map((cls) => cls.title))];
+  const uniqueEventTitles = [...new Set(events.map((evt) => evt.title))];
 
-    form.innerHTML = `
+  const options = [
+    ...uniqueClassTitles.map(
+      (title) => `<option value="class::${title}">${title} (Class)</option>`
+    ),
+    ...uniqueEventTitles.map(
+      (title) => `<option value="event::${title}">${title} (Event)</option>`
+    ),
+  ];
+
+  form.innerHTML = `
     <input name="title" placeholder="Task Title" required class="w-full border px-2 py-1 rounded" />
     <input name="description" placeholder="Description" class="w-full border px-2 py-1 rounded" />
     <input name="due_date" type="date" required class="w-full border px-2 py-1 rounded" />
@@ -38,11 +54,10 @@ export function openModal(type) {
       ${options.join("")}
     </select>
   `;
-  }
+}
 
-  if (type === "addClass") {
-    title.textContent = "Add Class";
-    form.innerHTML = `
+function renderClassForm(form) {
+  form.innerHTML = `
     <input name="title" placeholder="Class Title" required class="w-full border px-2 py-1 rounded" />
     <input name="location" placeholder="Location" required class="w-full border px-2 py-1 rounded" />
 
@@ -52,14 +67,12 @@ export function openModal(type) {
 
     <div id="offline-fields">
       <input name="room" placeholder="Room (optional)" class="w-full border px-2 py-1 rounded" />
-
       <div class="my-2">Time:</div>
-        <div class="flex items-center gap-2 mb-2">
-          <input name="start_time" type="time" required class="border px-2 py-1 rounded" />
-          <span>–</span>
-          <input name="end_time" type="time" required class="border px-2 py-1 rounded" />
-        </div>
-
+      <div class="flex items-center gap-2 mb-2">
+        <input name="start_time" type="time" required class="border px-2 py-1 rounded" />
+        <span>–</span>
+        <input name="end_time" type="time" required class="border px-2 py-1 rounded" />
+      </div>
       <div class="my-2">Days:</div>
       <div class="flex flex-wrap gap-2 mb-2">
         ${["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
@@ -69,7 +82,6 @@ export function openModal(type) {
           )
           .join("")}
       </div>
-
       <div class="mb-2">Term:</div>
       <div class="flex gap-2 mb-2">
         ${["fall", "winter", "spring", "summer"]
@@ -81,7 +93,6 @@ export function openModal(type) {
           )
           .join("")}
       </div>
-
       <select name="year" class="w-full border px-2 py-1 rounded">
         ${Array.from({ length: 6 }, (_, i) => {
           const y = 2023 + i;
@@ -91,41 +102,78 @@ export function openModal(type) {
     </div>
   `;
 
-    const onlineCheckbox = document.getElementById("onlineCheckbox");
-    const offlineFields = document.getElementById("offline-fields");
+  const onlineCheckbox = document.getElementById("onlineCheckbox");
+  const offlineFields = document.getElementById("offline-fields");
 
-    onlineCheckbox.addEventListener("change", () => {
-      offlineFields.style.display = onlineCheckbox.checked ? "none" : "block";
-    });
-  }
-
-  if (type === "addEvent") {
-    title.textContent = "Add Event";
-    form.innerHTML = `...`;
-  }
+  onlineCheckbox.addEventListener("change", () => {
+    offlineFields.style.display = onlineCheckbox.checked ? "none" : "block";
+  });
 }
 
-export function submitModal(userId, focusedDate, setFocusedDate) {
+function renderEventForm(form) {
+  form.innerHTML = `
+    <input name="title" placeholder="Event Title" required class="w-full border px-2 py-1 rounded" />
+    <input name="location" placeholder="Location" required class="w-full border px-2 py-1 rounded" />
+
+    <label class="block mt-2">
+      <input type="checkbox" name="is_recurring" id="recurringCheckbox" class="mr-2" />
+      Recurring Event?
+    </label>
+
+    <div id="date-fields">
+      <input name="date" type="date" class="w-full border px-2 py-1 rounded" />
+    </div>
+
+    <div id="recurring-fields" style="display:none;">
+      <div class="my-2 font-semibold">Recurring Days</div>
+      <div class="flex flex-wrap gap-2 mb-2">
+        ${[
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ]
+          .map(
+            (day) =>
+              `<label><input type="checkbox" name="recurring_days" value="${day}" class="mr-1" />${day}</label>`
+          )
+          .join("")}
+      </div>
+      <input name="start_date" type="date" class="w-full border px-2 py-1 rounded" placeholder="Start Date" />
+      <input name="end_date" type="date" class="w-full border px-2 py-1 rounded" placeholder="End Date" />
+    </div>
+
+    <div class="flex items-center gap-2 mb-2 mt-2">
+      <input name="start_time" type="time" required class="border px-2 py-1 rounded" />
+      <span>–</span>
+      <input name="end_time" type="time" required class="border px-2 py-1 rounded" />
+    </div>
+  `;
+
+  const checkbox = document.getElementById("recurringCheckbox");
+  const dateFields = document.getElementById("date-fields");
+  const recurringFields = document.getElementById("recurring-fields");
+
+  checkbox.addEventListener("change", () => {
+    if (checkbox.checked) {
+      dateFields.style.display = "none";
+      recurringFields.style.display = "block";
+    } else {
+      dateFields.style.display = "block";
+      recurringFields.style.display = "none";
+    }
+  });
+}
+
+export function submitModal(userId, focusedDate) {
   const form = document.getElementById("modal-form");
   const type = form.dataset.type;
-  const data = Object.fromEntries(new FormData(form)); // raw form data
+  const data = Object.fromEntries(new FormData(form));
 
-  console.log("🟡 Form submission started for type:", type);
-  console.log("🟡 Raw form data collected:", data);
-
-  if (type === "addTask" && data.linked_to) {
-    const [linkType, linkTitle] = data.linked_to.split("::");
-    if (linkType && linkTitle) {
-      data.linked_to = {
-        type: linkType,
-        title: linkTitle,
-      };
-    } else {
-      delete data.linked_to;
-    }
-  }
-
-  const postFunc =
+  let postFunc =
     type === "addClass"
       ? postClass
       : type === "addTask"
@@ -134,9 +182,23 @@ export function submitModal(userId, focusedDate, setFocusedDate) {
       ? postEvent
       : null;
 
+  if (!postFunc) return;
+
+  // Handle linked tasks
+  if (type === "addTask" && data.linked_to) {
+    const [linkType, linkTitle] = data.linked_to.split("::");
+    if (linkType && linkTitle) {
+      data.linked_to = { type: linkType, title: linkTitle };
+    } else {
+      delete data.linked_to;
+    }
+  }
+
+  // Special handling for classes
   if (type === "addClass") {
     data.online = form.querySelector('[name="online"]').checked;
 
+    // Recurring in-person class
     if (!data.online) {
       data.days = [...form.querySelectorAll('input[name="days"]:checked')].map(
         (d) => d.value
@@ -155,40 +217,70 @@ export function submitModal(userId, focusedDate, setFocusedDate) {
           data.start_date = start_date;
           data.end_date = end_date;
 
-          console.log(
-            "🟡 Final recurring class data before postClass():",
-            data
-          );
-          return postFunc(userId, data); // 👈 passing userId + data separately
+          return postRecurringClass(userId, data);
         })
         .then(() => {
           closeModal();
           updateViewRequest(userId, focusedDate);
         })
         .catch((err) => {
-          console.error("❌ Error submitting class (recurring):", err);
-          alert("Failed to submit class: " + err.message);
+          console.error("Error submitting recurring class:", err);
+          alert("Failed to submit recurring class: " + err.message);
         });
 
       return;
-    } else {
-      console.log("🟡 Posting online class data:", data);
     }
+
+    // Online class (skip term/days)
+    data.start_time = data.start_time || null;
+    data.end_time = data.end_time || null;
   }
 
-  if (postFunc) {
-    console.log("📤 Calling postFunc() with:", { userId, data });
+  if (type === "addEvent") {
+    const isRecurring = form.querySelector("#recurringCheckbox")?.checked;
 
-    postFunc(userId, data)
-      .then(() => {
-        closeModal();
-        updateViewRequest(userId, focusedDate);
+    if (isRecurring) {
+      data.days = [
+        ...form.querySelectorAll('input[name="recurring_days"]:checked'),
+      ].map((d) => d.value);
+
+      data.start_time = data.start_time || null;
+      data.end_time = data.end_time || null;
+
+      return postRecurringEvent(userId, {
+        title: data.title,
+        location: data.location,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        days: data.days,
       })
-      .catch((err) => {
-        console.error("❌ Error submitting:", err);
-        alert("Failed to submit: " + err.message);
-      });
+        .then(() => {
+          closeModal();
+          updateViewRequest(userId, focusedDate);
+        })
+        .catch((err) => {
+          console.error("Error submitting recurring event:", err);
+          alert("Failed to submit recurring event: " + err.message);
+        });
+    }
+
+    // One-time event
+    data.event_date = data.date;
+    delete data.date;
   }
+
+  // Submit tasks, events, or online classes
+  postFunc(userId, data)
+    .then(() => {
+      closeModal();
+      updateViewRequest(userId, focusedDate);
+    })
+    .catch((err) => {
+      console.error("Error submitting:", err);
+      alert("Failed to submit: " + err.message);
+    });
 }
 
 export function closeModal() {

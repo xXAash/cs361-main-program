@@ -1,34 +1,23 @@
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from typing import List
+from models import Event
 from services.logic.add_event import (
-    insert_event, 
-    insert_recurring_events, 
+    insert_single_event,
+    insert_recurring_events,
     fetch_user_events
 )
-from models import Event
-from services.utils.recurring_generator import generate_recurring_items
+from services.logic.add_requests import AddEventRequest, AddRecurringEventRequest
 
 router = APIRouter()
 
 @router.post("/api/events")
-def add_event(entry: Event):
-    if entry.recurring and entry.recurring.is_recurring:
-        generated = generate_recurring_items(
-        title=entry.title,
-        location=entry.location,
-        start_time=entry.start_time,
-        end_time=entry.end_time,
-        days=entry.recurring.days,
-        start_date=entry.recurring.start_date,
-        end_date=entry.recurring.end_date,
-        item_type="event",
-        extras={"user_id": entry.user_id}
-    )
-        return insert_recurring_events(generated, entry.user_id)
-    else:
-        return insert_event(entry.dict(), entry.user_id)
+def add_event(req: AddEventRequest):
+    return insert_single_event(req)
 
-@router.get("/api/events/{user_id}")
+@router.post("/api/events/recurring")
+def add_recurring_event(req: AddRecurringEventRequest):
+    return insert_recurring_events(req)
+
+@router.get("/api/events/{user_id}", response_model=List[Event])
 def get_events(user_id: str):
-    events = fetch_user_events(user_id)
-    return JSONResponse(content=events)
+    return fetch_user_events(user_id)

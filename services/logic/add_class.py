@@ -15,8 +15,14 @@ def insert_single_class(req: AddClassRequest):
     new_class = req.new_class.dict()
     new_class["_id"] = ObjectId()
     new_class["class_date"] = new_class.get("class_date")
-    new_class["start_time"] = new_class.get("start_time")
-    new_class["end_time"] = new_class.get("end_time")
+    start_time = new_class.get("start_time")
+    end_time = new_class.get("end_time")
+
+    if isinstance(start_time, time):
+        new_class["start_time"] = start_time.isoformat()
+
+    if isinstance(end_time, time):
+        new_class["end_time"] = end_time.isoformat()
 
     db.users.update_one(
         {"_id": ObjectId(req.user_id)},
@@ -46,8 +52,15 @@ def insert_recurring_classes(req: AddRecurringClassRequest):
 
     for cls in generated_classes:
         cls["_id"] = ObjectId()
+
         if "class_date" in cls:
             cls["class_date"] = cls["class_date"].isoformat()
+
+        if "start_time" in cls and isinstance(cls["start_time"], time):
+            cls["start_time"] = cls["start_time"].isoformat()
+
+        if "end_time" in cls and isinstance(cls["end_time"], time):
+            cls["end_time"] = cls["end_time"].isoformat()
 
     db.users.update_one(
         {"_id": ObjectId(req.user_id)},
@@ -60,9 +73,5 @@ def fetch_user_classes(user_id: str):
     user = db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    classes = user.get("classes", [])
-    for cls in classes:
-        cls.pop("user_id", None)
-
-    return convert_objectid_to_string(classes)
+    
+    return convert_objectid_to_string(user.get("classes", []))

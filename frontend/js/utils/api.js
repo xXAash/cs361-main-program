@@ -58,35 +58,58 @@ export async function postTask(userId, taskData) {
   });
 }
 
-// 🆕 POST an event (expects userId and eventData)
-export async function postEvent(userId, eventData) {
-  const recurring = eventData.recurring_days
-    ? {
-        is_recurring: true,
-        days: eventData.recurring_days.split(",").map((d) => d.trim()),
-        start_date: eventData.start_date,
-        end_date: eventData.end_date,
-      }
-    : null;
+export async function postRecurringClass(userId, classData) {
+  return fetch("/api/classes/recurring", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      ...classData,
+    }),
+  }).then((res) => {
+    if (!res.ok) {
+      return res.text().then((text) => {
+        throw new Error(
+          `Failed to post recurring class: ${res.status} ${text}`
+        );
+      });
+    }
+    return res.json();
+  });
+}
 
+export async function postEvent(userId, eventData) {
   return fetch("/api/events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       user_id: userId,
-      new_event: {
-        title: eventData.title,
-        location: eventData.location,
-        start_time: eventData.start_time,
-        end_time: eventData.end_time,
-        event_date: eventData.date || null,
-        recurring: recurring,
-      },
+      new_event: eventData, // already formatted in modal.js
     }),
   }).then((res) => {
     if (!res.ok) {
       return res.text().then((text) => {
         throw new Error(`Failed to post event: ${res.status} ${text}`);
+      });
+    }
+    return res.json();
+  });
+}
+
+export async function postRecurringEvent(userId, eventData) {
+  return fetch("/api/events/recurring", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      ...eventData,
+    }),
+  }).then((res) => {
+    if (!res.ok) {
+      return res.text().then((text) => {
+        throw new Error(
+          `Failed to post recurring event: ${res.status} ${text}`
+        );
       });
     }
     return res.json();

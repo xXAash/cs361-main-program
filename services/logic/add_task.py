@@ -38,10 +38,5 @@ def fetch_user_tasks(user_id: str):
     user = db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    tasks = user.get("tasks", [])
-    # Strip user_id from each task before returning
-    for task in tasks:
-        task.pop("user_id", None)
-    return convert_objectid_to_string(tasks)
-
+    
+    return convert_objectid_to_string(user.get("tasks", []))

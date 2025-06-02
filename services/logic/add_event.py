@@ -1,56 +1,69 @@
 from fastapi import HTTPException
 from bson import ObjectId
+from datetime import time
 from db import db
 from services.utils.objectID_converter import convert_objectid_to_string
+from services.utils.recurring_generator import generate_recurring_items
+from services.logic.add_requests import AddEventRequest, AddRecurringEventRequest
 
-def insert_event(event_data: dict, user_id: str):
-    user = db.users.find_one({"_id": ObjectId(user_id)})
+def insert_single_event(req: AddEventRequest):
+    user = db.users.find_one({"_id": ObjectId(req.user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    event_data["_id"] = ObjectId()
-    if "event_date" in event_data:
-        event_data["event_date"] = event_data["event_date"].isoformat()
-    if "start_time" in event_data:
-        event_data["start_time"] = event_data["start_time"].isoformat()
-    if "end_time" in event_data:
-        event_data["end_time"] = event_data["end_time"].isoformat()
+    new_event = req.new_event.dict()
+    new_event["_id"] = ObjectId()
+
+    if "event_date" in new_event:
+        new_event["event_date"] = new_event["event_date"].isoformat()
+    if "start_time" in new_event:
+        new_event["start_time"] = new_event["start_time"].isoformat()
+    if "end_time" in new_event:
+        new_event["end_time"] = new_event["end_time"].isoformat()
 
     db.users.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$push": {"events": event_data}}
+        {"_id": ObjectId(req.user_id)},
+        {"$push": {"events": new_event}}
     )
+
     return {"msg": "Event added successfully"}
 
-def insert_recurring_events(events: list[dict], user_id: str):
-    user = db.users.find_one({"_id": ObjectId(user_id)})
+def insert_recurring_events(req: AddRecurringEventRequest):
+    user = db.users.find_one({"_id": ObjectId(req.user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    for e in events:
-        e["_id"] = ObjectId()
-        if "event_date" in e:
-            e["event_date"] = e["event_date"].isoformat()
-        if "start_time" in e:
-            e["start_time"] = e["start_time"].isoformat()
-        if "end_time" in e:
-            e["end_time"] = e["end_time"].isoformat()
+    generated_events = generate_recurring_items(
+        title=req.title,
+        location=req.location,
+        start_time=req.start_time,
+        end_time=req.end_time,
+        days=req.days,
+        start_date=req.start_date,
+        end_date=req.end_date,
+        item_type="event",
+        extras={}
+    )
+
+    for event in generated_events:
+        event["_id"] = ObjectId()
+        if "event_date" in event:
+            event["event_date"] = event["event_date"].isoformat()
+        if "start_time" in event and isinstance(event["start_time"], time):
+            event["start_time"] = event["start_time"].isoformat()
+        if "end_time" in event and isinstance(event["end_time"], time):
+            event["end_time"] = event["end_time"].isoformat()
 
     db.users.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$push": {"events": {"$each": events}}}
+        {"_id": ObjectId(req.user_id)},
+        {"$push": {"events": {"$each": generated_events}}}
     )
-    return {"msg": f"{len(events)} recurring events added"}
+
+    return {"msg": f"{len(generated_events)} event instances added"}
 
 def fetch_user_events(user_id: str):
     user = db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    events = user.get("events", [])
-    
-    # ✅ Remove user_id from each event before returning
-    for event in events:
-        event.pop("user_id", None)
-
-    return convert_objectid_to_string(events)
+    return convert_objectid_to_string(user.get("events", []))

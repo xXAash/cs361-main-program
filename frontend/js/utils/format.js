@@ -42,11 +42,13 @@ export function formatClassEvent(entry) {
   const start = formatTime24to12(entry.start_time);
   const end = formatTime24to12(entry.end_time);
 
-  if (entry.date) {
-    const date = formatDateLong(entry.date);
+  const rawDate = entry.class_date || entry.event_date;
+
+  if (rawDate) {
+    const date = formatDateLong(rawDate);
     return `${title}${location} - ${date} from ${start} to ${end}`;
   } else if (entry.recurring && entry.recurring.is_recurring) {
-    const days = entry.recurring.days.join(", ");
+    const days = entry.recurring.days?.join(", ") || "Unknown days";
     return `${title}${location} - Recurs on ${days} from ${start} to ${end}`;
   } else {
     return title;
