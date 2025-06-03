@@ -86,7 +86,7 @@ while True:
                     "tasks": filtered_tasks,
                 }
 
-                result = convert_objectids(result)
+                result = convert_objectids(result)  # Convert all ObjectIds to strings
 
             with open(output_file, "w") as f:
                 import json
